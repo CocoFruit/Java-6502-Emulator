@@ -23,9 +23,34 @@ public class UByte{
         return new UByte((this.value - other.value) & 0xFF);
     }
 
-    public UByte multiply(UByte other){
-        return new UByte((this.value * other.value) & 0xFF);
+    public UByte and(UByte other){
+        return new UByte(this.value & other.value);
     }
+
+    public UByte or(UByte other){
+        return new UByte(this.value | other.value);
+    }
+
+    public UByte xor(UByte other){
+        return new UByte(this.value ^ other.value);
+    }
+
+    public UByte not(){
+        return new UByte(~this.value & 0xFF);
+    }
+
+    public UByte shiftLeft(){
+        return new UByte((this.value << 1) & 0xFF);
+    }
+
+    public UByte shiftRight(){
+        return new UByte((this.value >> 1) & 0xFF);
+    }
+
+    public boolean equals(UByte other){
+        return this.value == other.value;
+    }
+
 
     // Display the value as an unsigned short
     @Override

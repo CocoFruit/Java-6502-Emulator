@@ -1,6 +1,6 @@
 public class ProcessorStatus {
     private byte flags = 0b01111111;
-    private final String flag_order = "0CZIDBVN";
+    private final String flag_order = "CZIDBVN0";
 
     private void n_flip(int n) {
         this.flags = (byte) (this.flags ^ (1 << n));
@@ -19,7 +19,7 @@ public class ProcessorStatus {
         this.n_flip(i);
     }
 
-    public void flag_set(char flag_c, boolean set) throws IllegalArgumentException {
+    public void set_flag(char flag_c, boolean set) throws IllegalArgumentException {
         int i = get_index(flag_c);
         
         if (set) {
@@ -31,7 +31,21 @@ public class ProcessorStatus {
 
     public void set_flags(char[] flags, boolean set) {
         for (char flag : flags) {
-            flag_set(flag, set);
+            set_flag(flag, set);
         }
+    }
+
+    public void prettyPrint() {
+        System.out.println("CZIDBVN0");
+        System.out.println(this);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            sb.append((this.flags & (1 << i)) == 0 ? '0' : '1');
+        }
+        return sb.toString();
     }
 }
