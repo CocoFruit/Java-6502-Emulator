@@ -1,3 +1,4 @@
+package common;
 /**
  * Represents an unsigned 8-bit value (0 to 255).
  */

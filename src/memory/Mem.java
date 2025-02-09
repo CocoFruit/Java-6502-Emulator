@@ -1,3 +1,8 @@
+package memory;
+
+import common.UByte;
+import common.UWord;
+
 public class Mem {
     // Define maximum memory size (64K) as a constant.
     private static final int MAX_MEM = 1024 * 64;

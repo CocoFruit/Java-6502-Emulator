@@ -1,9 +1,15 @@
+package cpu;
+
+import common.UByte;
+import common.UWord;
+import memory.Mem;
+
 public class CPU {
     private UWord PC; // program counter
     private UByte SP; // stack pointer
     private UByte A, X, Y; // registers
     private int cycles;
-    ProcessorStatus status = new ProcessorStatus();
+    Flags status = new Flags();
 
     // opcodes
     public final UByte 

@@ -1,3 +1,4 @@
+package common;
 /**
  * A class that represents a 16-bit unsigned word.
  * Values are stored in the range 0 to 0xFFFF.

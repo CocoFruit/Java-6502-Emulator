@@ -1,3 +1,7 @@
+import common.UByte;
+import cpu.CPU;
+import memory.Mem;
+
 public class Main {
     public static void main(String[] args) {
         // Create a new CPU and Memory instance

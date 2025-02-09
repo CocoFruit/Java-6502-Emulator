@@ -1,3 +1,4 @@
+package cpu;
 /**
  * Represents the processor status register with individual flag bits.
  * Each bit is associated with a flag, as defined by FLAG_ORDER.
@@ -11,7 +12,7 @@
  * - Bit 6 represents the 'N' (negative) flag,
  * - Bit 7 is unused (or could be used as needed).
  */
-public class ProcessorStatus {
+public class Flags {
     private byte flags = 0b01111111;
     private static final String FLAG_ORDER = "CZIDBVN0";
 
