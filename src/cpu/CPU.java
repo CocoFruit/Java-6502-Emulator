@@ -1,6 +1,7 @@
 package cpu;
 
 import memory.Mem;
+import cpu.Opcode;
 
 public class CPU {
     private char PC; // program counter
@@ -18,8 +19,6 @@ public class CPU {
 
     private byte flags;
 
-    public final byte INS_LDA_IM = (byte) 0xA9;
-
     public void print_status(){
         System.out.println("\nCZIDBVN ");
         for(int i = 0; i < 8; i++){
@@ -29,11 +28,12 @@ public class CPU {
 
     public void print_registers(){
         // print in hex and add 0x and unsigned hex value
+        System.out.println("    0x     | Dec");
         System.out.println(" A: 0x" + Integer.toHexString(A & 0xFF) + "   | " + (A & 0xFF));
         System.out.println(" X: 0x" + Integer.toHexString(X & 0xFF) + "    | " + (X & 0xFF));
         System.out.println(" Y: 0x" + Integer.toHexString(Y & 0xFF) + "    | " + (Y & 0xFF));
         System.out.println("PC: 0x" + Integer.toHexString(PC & 0xFFFF) + " | " + (PC & 0xFFFF));
-        System.out.println("SP: 0x" + Integer.toHexString(SP & 0xFF) + "    | " + (SP & 0xFF));
+        System.out.println("SP: 0x" + Integer.toHexString(SP & 0xFF) + "   | " + (SP & 0xFF));
     }
 
     public void reset(Mem memory){
@@ -70,10 +70,18 @@ public class CPU {
         this.cycles = cyclesSet;
         while(this.cycles > 0){
             byte instruction = fetchByte(memory);
-            switch (instruction) {
-                case INS_LDA_IM:
+            Opcode opcode = Opcode.fromByte(instruction);
+
+            if (opcode == null) {
+                throw new IllegalStateException("Instruction not recognized: 0x" + Integer.toHexString(instruction & 0xFF));
+            }
+
+            switch (opcode) {
+                case LDA_IM:
                     handleLDAImmediate(memory);
                     break;
+                
+                
 
                 default:
                     throw new IllegalStateException("Instruction not recognized: " + instruction);

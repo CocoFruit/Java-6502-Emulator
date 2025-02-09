@@ -1,4 +1,5 @@
 import cpu.CPU;
+import cpu.Opcode;
 import memory.Mem;
 
 public class Main {
@@ -11,7 +12,7 @@ public class Main {
         cpu.reset(memory);
 
         // test LDA Immediate
-        memory.setByte((char)0xFFFC, cpu.INS_LDA_IM);
+        memory.setByte((char)0xFFFC, Opcode.LDA_IM.getCode());
         memory.setByte((char)0xFFFD, (byte)0x84);
         cpu.execute(2, memory);
 
