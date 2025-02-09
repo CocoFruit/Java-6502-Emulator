@@ -1,130 +1,85 @@
 package cpu;
 
-import common.UByte;
-import common.UWord;
 import memory.Mem;
 
 public class CPU {
-    private UWord PC; // program counter
-    private UByte SP; // stack pointer
-    private UByte A, X, Y; // registers
+    private char PC; // program counter
+    private byte SP; // stack pointer
+    private byte A, X, Y; // registers
     private int cycles;
-    Flags status = new Flags();
 
-    // opcodes
-    public final UByte 
-        INS_LDA_IM = new UByte(0xA9),
-        INS_LDA_ZP = new UByte(0xA5),
-        INS_LDA_ZPX = new UByte(0xB5),
-        INS_JSR   = new UByte(0x20);
+    private static final byte C  = 1 << 0; // carry flag
+    private static final byte Z  = 1 << 1; // zero flag
+    private static final byte I  = 1 << 2; // interrupt disable flag
+    private static final byte D  = 1 << 3; // decimal mode flag
+    private static final byte B  = 1 << 4; // break command flag
+    private static final byte V  = 1 << 5; // overflow flag
+    private static final byte N  = 1 << 6; // negative flag
+
+    private byte flags;
+
+    public final byte INS_LDA_IM = (byte) 0xA9;
 
     public void print_status(){
-        status.prettyPrint();
+        System.out.println("\nCZIDBVN ");
+        for(int i = 0; i < 8; i++){
+            System.out.print((flags & (1 << i)) == 0 ? '0' : '1');
+        }
     }
 
     public void print_registers(){
-        System.out.println("A: " + A);
-        System.out.println("X: " + X);
-        System.out.println("Y: " + Y);
-        System.out.println("PC: " + PC);
-        System.out.println("SP: " + SP);
+        // print in hex and add 0x and unsigned hex value
+        System.out.println(" A: 0x" + Integer.toHexString(A & 0xFF) + "   | " + (A & 0xFF));
+        System.out.println(" X: 0x" + Integer.toHexString(X & 0xFF) + "    | " + (X & 0xFF));
+        System.out.println(" Y: 0x" + Integer.toHexString(Y & 0xFF) + "    | " + (Y & 0xFF));
+        System.out.println("PC: 0x" + Integer.toHexString(PC & 0xFFFF) + " | " + (PC & 0xFFFF));
+        System.out.println("SP: 0x" + Integer.toHexString(SP & 0xFF) + "    | " + (SP & 0xFF));
     }
 
     public void reset(Mem memory){
-        PC = new UWord(0xFFFC);
-        SP = new UByte(0xFD);
-        status.setFlags("CZIDBVN".toCharArray(), false);
-        memory.initialize();
+        PC = (char) 0xFFFC;
+        SP = (byte) 0xFD;
+        flags = 0b0000000;
     }
 
-    // fetch byte and increment PC
-    private UByte fetchByte(Mem memory){
-        UByte data = memory.getByte(PC);
-        PC.setValue(PC.getValue() + 1);
-        cycles--;
+    private byte fetchByte(Mem memory){
+        byte data = memory.getByte(PC);
+        PC += 1;
+        this.cycles -= 1;
         return data;
     }
 
-    // fetch word (little endian) and increment PC by 2
-    private UWord fetchWord(Mem memory){
-        UByte low  = fetchByte(memory);
-        UByte high = fetchByte(memory);
-        // Combine bytes into a word (little endian)
-        return new UWord((high.getValue() << 8) | low.getValue());
-    }
-
-    // read byte from memory without changing PC
-    private UByte readByte(UByte address, Mem memory){
-        cycles--;
-        return memory.getByte(address.getValue());
-    }
-
     private void updateLDAFlags() {
-        status.setFlag('Z', A.equals(new UByte(0x00)));
-        UByte result = A.and(new UByte(0x80));
-        status.setFlag('N', result.getValue() == 0x80);
+        // set Z flag if A = 0
+        if (A == 0)
+            flags |= Z;
+        else
+            flags &= ~Z;
+        // set N flag if A has bit 7 set
+        if ((A & 0x80) == 0x80)
+            flags |= N;
+        else
+            flags &= ~N;
     }
 
-    // Push a byte onto the stack
-    private void pushByte(UByte value, Mem memory) {
-        int addr = 0x0100 + SP.getValue();
-        memory.setByte(addr, value);
-        SP.setValue(SP.getValue() - 1);
-        cycles--;
-    }
-
-    // Pop a byte from the stack
-    private UByte popByte(Mem memory) {
-        SP.setValue(SP.getValue() + 1);
-        cycles--;
-        int addr = 0x0100 + SP.getValue();
-        return memory.getByte(addr);
-    }
-
-    // Instruction handlers
-    private void handleLDAImmediate(Mem memory) {
+    private void handleLDAImmediate(Mem memory){
         A = fetchByte(memory);
         updateLDAFlags();
     }
+    public void execute(int cyclesSet, Mem memory) throws IllegalStateException {
+        this.cycles = cyclesSet;
+        while(this.cycles > 0){
+            byte instruction = fetchByte(memory);
+            switch (instruction) {
+                case INS_LDA_IM:
+                    handleLDAImmediate(memory);
+                    break;
 
-    private void handleLDAZeroPage(Mem memory) {
-        UByte zpAddr = fetchByte(memory);
-        A = readByte(zpAddr, memory);
-        updateLDAFlags();
-    }
-
-    private void handleLDAZeroPageIndexed(Mem memory) {
-        UByte zpAddr = fetchByte(memory);
-        zpAddr = zpAddr.add(X);
-        A = readByte(zpAddr, memory);
-        updateLDAFlags();
-    }
-
-    private void handleJSR(Mem memory) {
-        UWord targetAddress = fetchWord(memory);
-        // Return address is (PC - 1)
-        int returnAddr = PC.getValue() - 1;
-        pushByte(new UByte((returnAddr >> 8) & 0xFF), memory); // push high byte
-        pushByte(new UByte(returnAddr & 0xFF), memory);        // push low byte
-        PC = targetAddress;
-        // Additional cycle adjustments if needed
-    }
-
-    public void execute(int cyclesSet, Mem memory) {
-        cycles = cyclesSet;
-        while (cycles > 0) {
-            UByte instruction = fetchByte(memory);
-            if (instruction.equals(INS_LDA_IM)) {
-                handleLDAImmediate(memory);
-            } else if (instruction.equals(INS_LDA_ZP)) {
-                handleLDAZeroPage(memory);
-            } else if (instruction.equals(INS_LDA_ZPX)) {
-                handleLDAZeroPageIndexed(memory);
-            } else if (instruction.equals(INS_JSR)) {
-                handleJSR(memory);
-            } else {
-                throw new IllegalStateException("Instruction not handled: " + instruction);
+                default:
+                    throw new IllegalStateException("Instruction not recognized: " + instruction);
             }
         }
     }
+    
+     
 }
